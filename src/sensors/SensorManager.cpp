@@ -38,99 +38,34 @@ namespace SlimeVR
     {
         void SensorManager::setup()
         {
-            uint8_t firstIMUAddress = 0;
-            uint8_t secondIMUAddress = 0;
-
+            int i = 0;
+            for (auto sensorInfo : m_SensorInfos)
             {
-#if IMU == IMU_BNO080 || IMU == IMU_BNO085 || IMU == IMU_BNO086
-                firstIMUAddress = I2CSCAN::pickDevice(0x4A, 0x4B, true);
-#elif IMU == IMU_BNO055
-                firstIMUAddress = I2CSCAN::pickDevice(0x29, 0x28, true);
-#elif IMU == IMU_MPU9250 || IMU == IMU_BMI160 || IMU == IMU_MPU6500 || IMU == IMU_MPU6050 || IMU == IMU_ICM20948
-                firstIMUAddress = I2CSCAN::pickDevice(0x68, 0x69, true);
-#else
-#error Unsupported primary IMU
-#endif
-
-                if (firstIMUAddress == 0)
-                {
-                    m_Sensor1 = new ErroneousSensor(0, IMU);
-                }
-                else
-                {
-                    m_Logger.trace("Primary IMU found at address 0x%02X", firstIMUAddress);
-
-#if IMU == IMU_BNO080 || IMU == IMU_BNO085 || IMU == IMU_BNO086
-                    m_Sensor1 = new BNO080Sensor(0, IMU, firstIMUAddress, IMU_ROTATION, PIN_IMU_INT);
-#elif IMU == IMU_BNO055
-                    m_Sensor1 = new BNO055Sensor(0, firstIMUAddress, IMU_ROTATION);
-#elif IMU == IMU_MPU9250
-                    m_Sensor1 = new MPU9250Sensor(0, firstIMUAddress, IMU_ROTATION);
-#elif IMU == IMU_BMI160
-                    m_Sensor1 = new BMI160Sensor(0, firstIMUAddress, IMU_ROTATION);
-#elif IMU == IMU_MPU6500 || IMU == IMU_MPU6050
-                    m_Sensor1 = new MPU6050Sensor(0, IMU, firstIMUAddress, IMU_ROTATION);
-#elif IMU == IMU_ICM20948
-                    m_Sensor1 = new ICM20948Sensor(0, firstIMUAddress, IMU_ROTATION);
-#endif
-                }
-
-                m_Sensor1->motionSetup();
+                m_Sensors.push_back(createSensor(m_Logger, i, sensorInfo));
+                i++;
             }
 
+            for (auto sensor : m_Sensors)
             {
-#if SECOND_IMU == IMU_BNO080 || SECOND_IMU == IMU_BNO085 || SECOND_IMU == IMU_BNO086
-                secondIMUAddress = I2CSCAN::pickDevice(0x4B, 0x4A, false);
-#elif SECOND_IMU == IMU_BNO055
-                secondIMUAddress = I2CSCAN::pickDevice(0x28, 0x29, false);
-#elif SECOND_IMU == IMU_MPU9250 || SECOND_IMU == IMU_BMI160 || SECOND_IMU == IMU_MPU6500 || SECOND_IMU == IMU_MPU6050 || SECOND_IMU == IMU_ICM20948
-                secondIMUAddress = I2CSCAN::pickDevice(0x69, 0x68, false);
-#else
-#error Unsupported secondary IMU
-#endif
-
-                if (secondIMUAddress == firstIMUAddress)
-                {
-                    m_Logger.debug("No secondary IMU connected");
-                }
-                else if (secondIMUAddress == 0)
-                {
-                    m_Sensor2 = new ErroneousSensor(1, SECOND_IMU);
-                }
-                else
-                {
-                    m_Logger.trace("Secondary IMU found at address 0x%02X", secondIMUAddress);
-
-#if SECOND_IMU == IMU_BNO080 || SECOND_IMU == IMU_BNO085 || SECOND_IMU == IMU_BNO086
-                    m_Sensor2 = new BNO080Sensor(1, SECOND_IMU, secondIMUAddress, SECOND_IMU_ROTATION, PIN_IMU_INT_2);
-#elif SECOND_IMU == IMU_BNO055
-                    m_Sensor2 = new BNO055Sensor(1, secondIMUAddress, SECOND_IMU_ROTATION);
-#elif SECOND_IMU == IMU_MPU9250
-                    m_Sensor2 = new MPU9250Sensor(1, secondIMUAddress, SECOND_IMU_ROTATION);
-#elif SECOND_IMU == IMU_BMI160
-                    m_Sensor2 = new BMI160Sensor(1, secondIMUAddress, SECOND_IMU_ROTATION);
-#elif SECOND_IMU == IMU_MPU6500 || SECOND_IMU == IMU_MPU6050
-                    m_Sensor2 = new MPU6050Sensor(1, SECOND_IMU, secondIMUAddress, SECOND_IMU_ROTATION);
-#elif SECOND_IMU == IMU_ICM20948
-                    m_Sensor2 = new ICM20948Sensor(1, secondIMUAddress, SECOND_IMU_ROTATION);
-#endif
-                }
-
-                m_Sensor2->motionSetup();
+                sensor->motionSetup();
             }
         }
 
         void SensorManager::postSetup()
         {
-            m_Sensor1->postSetup();
-            m_Sensor2->postSetup();
+            for (auto sensor : m_Sensors)
+            {
+                sensor->postSetup();
+            }
         }
 
         void SensorManager::update()
         {
             // Gather IMU data
-            m_Sensor1->motionLoop();
-            m_Sensor2->motionLoop();
+            for (auto sensor : m_Sensors)
+            {
+                sensor->motionLoop();
+            }
 
             if (!ServerConnection::isConnected())
             {
@@ -138,8 +73,71 @@ namespace SlimeVR
             }
 
             // Send updates
-            m_Sensor1->sendData();
-            m_Sensor2->sendData();
+            for (auto sensor : m_Sensors)
+            {
+                sensor->sendData();
+            }
+        }
+
+        void SensorManager::updateSensorData()
+        {
+            Network::update(m_Sensors);
+        }
+
+        Sensor * SensorManager::createSensor(SlimeVR::Logging::Logger logger, uint8_t id, SlimeVR::Sensors::SensorInfo sensorInfo)
+        {
+            uint8_t imuAddress = 0;
+            switch (sensorInfo.sensorType)
+            {
+            case IMU_BNO080:
+            case IMU_BNO085:
+            case IMU_BNO086:
+                imuAddress = I2CSCAN::pickDevice(0x4A, 0x4B, true);
+                break;
+            case IMU_BNO055:
+                imuAddress = I2CSCAN::pickDevice(0x29, 0x28, true);
+                break;
+            case IMU_MPU9250:
+            case IMU_BMI160:
+            case IMU_MPU6500:
+            case IMU_MPU6050:
+            case IMU_ICM20948:
+                if (id % 2 == 0)
+                    imuAddress = I2CSCAN::pickDevice(0x68, 0x69, true);
+                else
+                    imuAddress = I2CSCAN::pickDevice(0x69, 0x68, true);
+                break;
+            default:
+                break;
+            }
+
+            if (imuAddress == 0)
+            {
+                return new ErroneousSensor(id, sensorInfo.sensorType);
+            }
+
+            logger.trace("IMU found at address 0x%02X", imuAddress);
+
+            switch (sensorInfo.sensorType)
+            {
+            case IMU_BNO080:
+            case IMU_BNO085:
+            case IMU_BNO086:
+                return new BNO080Sensor(id, sensorInfo.sensorType, imuAddress, sensorInfo.sensorRotation, sensorInfo.sensorIntPin);
+            case IMU_BNO055:
+                return new BNO055Sensor(id, imuAddress, sensorInfo.sensorRotation);
+            case IMU_MPU9250:
+                return new MPU9250Sensor(id, imuAddress, sensorInfo.sensorRotation);
+            case IMU_BMI160:
+                return new BMI160Sensor(id, imuAddress, sensorInfo.sensorRotation);
+            case IMU_MPU6500:
+            case IMU_MPU6050:
+                return new MPU6050Sensor(id, sensorInfo.sensorType, imuAddress, sensorInfo.sensorRotation);
+            case IMU_ICM20948:
+                return new ICM20948Sensor(id, imuAddress, sensorInfo.sensorRotation);
+            default:
+                return new ErroneousSensor(id, sensorInfo.sensorType);
+            }
         }
     }
 }

@@ -33,30 +33,50 @@ namespace SlimeVR
 {
     namespace Sensors
     {
+
+        class SensorInfo
+        {
+        public:
+            SensorInfo(
+                uint8_t sensorType,
+                float sensorRotation,
+                uint8_t sensorIntPin)
+            {
+                this->sensorType = sensorType;
+                this->sensorRotation = sensorRotation;
+                this->sensorIntPin = sensorIntPin;
+            }
+
+            uint8_t sensorType;
+            float sensorRotation;
+            uint8_t sensorIntPin;
+        };
+
         class SensorManager
         {
         public:
-            SensorManager()
-                : m_Logger(SlimeVR::Logging::Logger("SensorManager")), m_Sensor1(new EmptySensor(0)), m_Sensor2(new EmptySensor(0)) {}
-            ~SensorManager()
-            {
-                delete m_Sensor1;
-                delete m_Sensor2;
+            SensorManager(std::vector<SlimeVR::Sensors::SensorInfo> sensorInfos)
+                : m_Logger(SlimeVR::Logging::Logger("SensorManager")), m_SensorInfos(sensorInfos) {}
+
+            ~SensorManager() {
+                for (auto sensor : m_Sensors) {
+                    delete sensor;
+                }
             }
 
             void setup();
             void postSetup();
 
             void update();
-
-            Sensor *getFirst() { return m_Sensor1; };
-            Sensor *getSecond() { return m_Sensor2; };
+            void updateSensorData();
 
         private:
             SlimeVR::Logging::Logger m_Logger;
 
-            Sensor *m_Sensor1;
-            Sensor *m_Sensor2;
+            std::vector<SensorInfo> m_SensorInfos;
+            std::vector<Sensor *> m_Sensors;
+
+            static Sensor *createSensor(SlimeVR::Logging::Logger logger, uint8_t id, SlimeVR::Sensors::SensorInfo sensorInfo);
         };
     }
 }

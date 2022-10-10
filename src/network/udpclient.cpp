@@ -53,7 +53,7 @@ unsigned char buf[8];
 SlimeVR::Logging::Logger udpClientLogger("UDPClient");
 
 template <typename T>
-unsigned char * convert_to_chars(T src, unsigned char * target)
+unsigned char *convert_to_chars(T src, unsigned char *target)
 {
     union uwunion
     {
@@ -69,7 +69,7 @@ unsigned char * convert_to_chars(T src, unsigned char * target)
 }
 
 template <typename T>
-T convert_chars(unsigned char * const src)
+T convert_chars(unsigned char *const src)
 {
     union uwunion
     {
@@ -83,81 +83,98 @@ T convert_chars(unsigned char * const src)
     return un.v;
 }
 
-namespace DataTransfer {
+namespace DataTransfer
+{
 
-    bool beginPacket() {
+    bool beginPacket()
+    {
         int r = Udp.beginPacket(host, port);
-        if(r == 0) {
+        if (r == 0)
+        {
             // Print error
         }
         return r > 0;
     }
 
-    bool endPacket() {
+    bool endPacket()
+    {
         int r = Udp.endPacket();
-        if(r == 0) {
+        if (r == 0)
+        {
             // Print error
         }
         return r > 0;
     }
 
-    void sendPacketType(uint8_t type) {
+    void sendPacketType(uint8_t type)
+    {
         Udp.write(0);
         Udp.write(0);
         Udp.write(0);
         Udp.write(type);
     }
 
-    void sendPacketNumber() {
+    void sendPacketNumber()
+    {
         uint64_t pn = packetNumber++;
         sendLong(pn);
     }
 
-    void sendFloat(float f) {
+    void sendFloat(float f)
+    {
         Udp.write(convert_to_chars(f, buf), sizeof(f));
     }
 
-    void sendByte(uint8_t c) {
+    void sendByte(uint8_t c)
+    {
         Udp.write(&c, 1);
     }
 
-    void sendInt(int i) {
+    void sendInt(int i)
+    {
         Udp.write(convert_to_chars(i, buf), sizeof(i));
     }
 
-    void sendLong(uint64_t l) {
+    void sendLong(uint64_t l)
+    {
         Udp.write(convert_to_chars(l, buf), sizeof(l));
     }
 
-    void sendBytes(const uint8_t * c, size_t length) {
+    void sendBytes(const uint8_t *c, size_t length)
+    {
         Udp.write(c, length);
     }
 
-    void sendShortString(const char * str) {
+    void sendShortString(const char *str)
+    {
         uint8_t size = strlen(str);
-        sendByte(size); // String size
-        sendBytes((const uint8_t *) str, size); // Firmware version string
-    }
-    
-    void sendLongString(const char * str) {
-        int size = strlen(str);
-        sendInt(size); // String size
-        sendBytes((const uint8_t *) str, size); // Firmware version string
+        sendByte(size);                        // String size
+        sendBytes((const uint8_t *)str, size); // Firmware version string
     }
 
-    int getWriteError() {
+    void sendLongString(const char *str)
+    {
+        int size = strlen(str);
+        sendInt(size);                         // String size
+        sendBytes((const uint8_t *)str, size); // Firmware version string
+    }
+
+    int getWriteError()
+    {
         return Udp.getWriteError();
     }
 }
 
 // PACKET_HEARTBEAT 0
-void Network::sendHeartbeat() {
-    if(!connected)
+void Network::sendHeartbeat()
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_HEARTBEAT);
         DataTransfer::sendPacketNumber();
         DataTransfer::endPacket();
@@ -165,13 +182,15 @@ void Network::sendHeartbeat() {
 }
 
 // PACKET_ACCEL 4
-void Network::sendAccel(float* vector, uint8_t sensorId) {
-    if(!connected)
+void Network::sendAccel(float *vector, uint8_t sensorId)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_ACCEL);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendFloat(vector[0]);
@@ -183,13 +202,15 @@ void Network::sendAccel(float* vector, uint8_t sensorId) {
 }
 
 // PACKET_RAW_CALIBRATION_DATA 6
-void Network::sendRawCalibrationData(float* vector, uint8_t calibrationType, uint8_t sensorId) {
-    if(!connected)
+void Network::sendRawCalibrationData(float *vector, uint8_t calibrationType, uint8_t sensorId)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_RAW_CALIBRATION_DATA);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendByte(sensorId);
@@ -201,13 +222,15 @@ void Network::sendRawCalibrationData(float* vector, uint8_t calibrationType, uin
     }
 }
 
-void Network::sendRawCalibrationData(int* vector, uint8_t calibrationType, uint8_t sensorId) {
-    if(!connected)
+void Network::sendRawCalibrationData(int *vector, uint8_t calibrationType, uint8_t sensorId)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_RAW_CALIBRATION_DATA);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendByte(sensorId);
@@ -220,13 +243,15 @@ void Network::sendRawCalibrationData(int* vector, uint8_t calibrationType, uint8
 }
 
 // PACKET_CALIBRATION_FINISHED 7
-void Network::sendCalibrationFinished(uint8_t calibrationType, uint8_t sensorId) {
-    if(!connected)
+void Network::sendCalibrationFinished(uint8_t calibrationType, uint8_t sensorId)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_CALIBRATION_FINISHED);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendByte(sensorId);
@@ -236,13 +261,15 @@ void Network::sendCalibrationFinished(uint8_t calibrationType, uint8_t sensorId)
 }
 
 // PACKET_BATTERY_LEVEL 12
-void Network::sendBatteryLevel(float batteryVoltage, float batteryPercentage) {
-    if(!connected)
+void Network::sendBatteryLevel(float batteryVoltage, float batteryPercentage)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_BATTERY_LEVEL);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendFloat(batteryVoltage);
@@ -252,13 +279,15 @@ void Network::sendBatteryLevel(float batteryVoltage, float batteryPercentage) {
 }
 
 // PACKET_TAP 13
-void Network::sendTap(uint8_t value, uint8_t sensorId) {
-    if(!connected)
+void Network::sendTap(uint8_t value, uint8_t sensorId)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_TAP);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendByte(sensorId);
@@ -268,13 +297,15 @@ void Network::sendTap(uint8_t value, uint8_t sensorId) {
 }
 
 // PACKET_ERROR 14
-void Network::sendError(uint8_t reason, uint8_t sensorId) {
-    if(!connected)
+void Network::sendError(uint8_t reason, uint8_t sensorId)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_ERROR);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendByte(sensorId);
@@ -284,13 +315,15 @@ void Network::sendError(uint8_t reason, uint8_t sensorId) {
 }
 
 // PACKET_SENSOR_INFO 15
-void Network::sendSensorInfo(Sensor * sensor) {
-    if(!connected)
+void Network::sendSensorInfo(Sensor *sensor)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_SENSOR_INFO);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendByte(sensor->getSensorId());
@@ -301,13 +334,15 @@ void Network::sendSensorInfo(Sensor * sensor) {
 }
 
 // PACKET_ROTATION_DATA 17
-void Network::sendRotationData(Quat * const quaternion, uint8_t dataType, uint8_t accuracyInfo, uint8_t sensorId) {
-    if(!connected)
+void Network::sendRotationData(Quat *const quaternion, uint8_t dataType, uint8_t accuracyInfo, uint8_t sensorId)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_ROTATION_DATA);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendByte(sensorId);
@@ -322,13 +357,15 @@ void Network::sendRotationData(Quat * const quaternion, uint8_t dataType, uint8_
 }
 
 // PACKET_MAGNETOMETER_ACCURACY 18
-void Network::sendMagnetometerAccuracy(float accuracyInfo, uint8_t sensorId) {
-    if(!connected)
+void Network::sendMagnetometerAccuracy(float accuracyInfo, uint8_t sensorId)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_MAGNETOMETER_ACCURACY);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendByte(sensorId);
@@ -338,13 +375,15 @@ void Network::sendMagnetometerAccuracy(float accuracyInfo, uint8_t sensorId) {
 }
 
 // PACKET_SIGNAL_STRENGTH 19
-void Network::sendSignalStrength(uint8_t signalStrength) {
-    if(!connected)
+void Network::sendSignalStrength(uint8_t signalStrength)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_SIGNAL_STRENGTH);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendByte(255);
@@ -354,13 +393,15 @@ void Network::sendSignalStrength(uint8_t signalStrength) {
 }
 
 // PACKET_TEMPERATURE 20
-void Network::sendTemperature(float temperature, uint8_t sensorId) {
-    if(!connected)
+void Network::sendTemperature(float temperature, uint8_t sensorId)
+{
+    if (!connected)
     {
         return;
     }
 
-    if(DataTransfer::beginPacket()) {
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_TEMPERATURE);
         DataTransfer::sendPacketNumber();
         DataTransfer::sendByte(sensorId);
@@ -369,17 +410,19 @@ void Network::sendTemperature(float temperature, uint8_t sensorId) {
     }
 }
 
-void Network::sendHandshake() {
-    if(DataTransfer::beginPacket()) {
+void Network::sendHandshake()
+{
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendPacketType(PACKET_HANDSHAKE);
         DataTransfer::sendLong(0); // Packet number is always 0 for handshake
         DataTransfer::sendInt(BOARD);
         // This is kept for backwards compatibility,
         // but the latest SlimeVR server will not initialize trackers
         // with firmware build > 8 until it recieves sensor info packet
-        DataTransfer::sendInt(IMU);
+        DataTransfer::sendInt(IMU_1);
         DataTransfer::sendInt(HARDWARE_MCU);
-        DataTransfer::sendInt(0); 
+        DataTransfer::sendInt(0);
         DataTransfer::sendInt(0);
         DataTransfer::sendInt(0);
         DataTransfer::sendInt(FIRMWARE_BUILD_NUMBER); // Firmware build number
@@ -387,10 +430,13 @@ void Network::sendHandshake() {
         uint8_t mac[6];
         WiFi.macAddress(mac);
         DataTransfer::sendBytes(mac, 6); // MAC address string
-        if(!DataTransfer::endPacket()) {
+        if (!DataTransfer::endPacket())
+        {
             udpClientLogger.error("Handshake write error: %d", Udp.getWriteError());
         }
-    } else {
+    }
+    else
+    {
         udpClientLogger.error("Handshake write error: %d", Udp.getWriteError());
     }
 }
@@ -403,7 +449,7 @@ void Network::sendInspectionRawIMUData(uint8_t sensorId, int16_t rX, int16_t rY,
         return;
     }
 
-    if(!DataTransfer::beginPacket()) 
+    if (!DataTransfer::beginPacket())
     {
         udpClientLogger.error("RawIMUData write begin error: %d", Udp.getWriteError());
         return;
@@ -432,7 +478,7 @@ void Network::sendInspectionRawIMUData(uint8_t sensorId, int16_t rX, int16_t rY,
     DataTransfer::sendInt(mZ);
     DataTransfer::sendByte(mA);
 
-    if(!DataTransfer::endPacket())
+    if (!DataTransfer::endPacket())
     {
         udpClientLogger.error("RawIMUData write end error: %d", Udp.getWriteError());
     }
@@ -440,7 +486,7 @@ void Network::sendInspectionRawIMUData(uint8_t sensorId, int16_t rX, int16_t rY,
 
 void Network::sendInspectionRawIMUData(uint8_t sensorId, float rX, float rY, float rZ, uint8_t rA, float aX, float aY, float aZ, uint8_t aA, float mX, float mY, float mZ, uint8_t mA)
 {
-    if (!connected) 
+    if (!connected)
     {
         return;
     }
@@ -474,7 +520,7 @@ void Network::sendInspectionRawIMUData(uint8_t sensorId, float rX, float rY, flo
     DataTransfer::sendFloat(mZ);
     DataTransfer::sendByte(mA);
 
-    if(!DataTransfer::endPacket())
+    if (!DataTransfer::endPacket())
     {
         udpClientLogger.error("RawIMUData write end error: %d", Udp.getWriteError());
     }
@@ -482,7 +528,7 @@ void Network::sendInspectionRawIMUData(uint8_t sensorId, float rX, float rY, flo
 
 void Network::sendInspectionFusedIMUData(uint8_t sensorId, Quat quaternion)
 {
-    if (!connected) 
+    if (!connected)
     {
         return;
     }
@@ -506,7 +552,7 @@ void Network::sendInspectionFusedIMUData(uint8_t sensorId, Quat quaternion)
     DataTransfer::sendFloat(quaternion.z);
     DataTransfer::sendFloat(quaternion.w);
 
-    if(!DataTransfer::endPacket())
+    if (!DataTransfer::endPacket())
     {
         udpClientLogger.error("FusedIMUData write end error: %d", Udp.getWriteError());
     }
@@ -514,7 +560,7 @@ void Network::sendInspectionFusedIMUData(uint8_t sensorId, Quat quaternion)
 
 void Network::sendInspectionCorrectionData(uint8_t sensorId, Quat quaternion)
 {
-    if (!connected) 
+    if (!connected)
     {
         return;
     }
@@ -538,44 +584,71 @@ void Network::sendInspectionCorrectionData(uint8_t sensorId, Quat quaternion)
     DataTransfer::sendFloat(quaternion.z);
     DataTransfer::sendFloat(quaternion.w);
 
-    if(!DataTransfer::endPacket())
+    if (!DataTransfer::endPacket())
     {
         udpClientLogger.error("CorrectionData write end error: %d", Udp.getWriteError());
     }
 }
 #endif
 
-void returnLastPacket(int len) {
-    if(DataTransfer::beginPacket()) {
+void returnLastPacket(int len)
+{
+    if (DataTransfer::beginPacket())
+    {
         DataTransfer::sendBytes(incomingPacket, len);
         DataTransfer::endPacket();
     }
 }
 
-void updateSensorState(Sensor * const sensor, Sensor * const sensor2) {
-    if(millis() - lastSensorInfoPacket > 1000) {
-        lastSensorInfoPacket = millis();
-        if(sensorStateNotified1 != sensor->getSensorState())
-            Network::sendSensorInfo(sensor);
-        if(sensorStateNotified2 != sensor2->getSensorState())
-            Network::sendSensorInfo(sensor2);
+void updateSensorState(std::vector<Sensor *> sensors)
+{
+    if (millis() - lastSensorInfoPacket > 1000)
+    {
+        bool hasChanged = false;
+        int i = 0;
+        for (auto sensor : sensors)
+        {
+            uint8_t notifiedState = 0;
+            if (i % 2 == 0)
+            {
+                notifiedState = sensorStateNotified1;
+            }
+            else
+            {
+                notifiedState = sensorStateNotified2;
+            }
+            if (notifiedState != sensor->getSensorState())
+            {
+                Network::sendSensorInfo(sensor);
+                hasChanged = true;
+            }
+
+            i++;
+        }
+
+        if (hasChanged)
+        {
+            lastSensorInfoPacket = millis();
+        }
     }
 }
 
-bool ServerConnection::isConnected() {
+bool ServerConnection::isConnected()
+{
     return connected;
 }
 
 void ServerConnection::connect()
 {
     unsigned long now = millis();
-    while(true) {
+    while (true)
+    {
         int packetSize = Udp.parsePacket();
         if (packetSize)
         {
             // receive incoming UDP packets
             int len = Udp.read(incomingPacket, sizeof(incomingPacket));
-            
+
 #ifdef DEBUG_NETWORK
             udpClientLogger.trace("Received %d bytes from %s, port %d", packetSize, Udp.remoteIP().toString().c_str(), Udp.remotePort());
             udpClientLogger.traceArray("UDP packet contents: ", incomingPacket, len);
@@ -594,10 +667,10 @@ void ServerConnection::connect()
                 connected = true;
                 statusManager.setStatus(SlimeVR::Status::SERVER_CONNECTING, false);
                 ledManager.off();
-                udpClientLogger.debug("Handshake successful, server is %s:%d", Udp.remoteIP().toString().c_str(), + Udp.remotePort());
+                udpClientLogger.debug("Handshake successful, server is %s:%d", Udp.remoteIP().toString().c_str(), +Udp.remotePort());
                 return;
             default:
-            continue;
+                continue;
             }
         }
         else
@@ -605,28 +678,31 @@ void ServerConnection::connect()
             break;
         }
     }
-    if(lastConnectionAttemptMs + 1000 < now)
+    if (lastConnectionAttemptMs + 1000 < now)
     {
         lastConnectionAttemptMs = now;
         udpClientLogger.info("Looking for the server...");
         Network::sendHandshake();
         ledManager.on();
     }
-    else if(lastConnectionAttemptMs + 20 < now)
+    else if (lastConnectionAttemptMs + 20 < now)
     {
         ledManager.off();
     }
 }
 
-void ServerConnection::resetConnection() {
+void ServerConnection::resetConnection()
+{
     Udp.begin(port);
     connected = false;
 
     statusManager.setStatus(SlimeVR::Status::SERVER_CONNECTING, true);
 }
 
-void ServerConnection::update(Sensor * const sensor, Sensor * const sensor2) {
-    if(connected) {
+void ServerConnection::update(std::vector<Sensor *> sensors)
+{
+    if (connected)
+    {
         int packetSize = Udp.parsePacket();
         if (packetSize)
         {
@@ -645,39 +721,43 @@ void ServerConnection::update(Sensor * const sensor, Sensor * const sensor2) {
                 Network::sendHeartbeat();
                 break;
             case PACKET_RECEIVE_VIBRATE:
-                
+
                 break;
             case PACKET_RECEIVE_HANDSHAKE:
                 // Assume handshake successful
                 udpClientLogger.warn("Handshake received again, ignoring");
                 break;
             case PACKET_RECEIVE_COMMAND:
-                
+
                 break;
             case PACKET_CONFIG:
-                
+
                 break;
             case PACKET_PING_PONG:
                 returnLastPacket(len);
                 break;
             case PACKET_SENSOR_INFO:
-                if(len < 6) {
+                if (len < 6)
+                {
                     udpClientLogger.warn("Wrong sensor info packet");
                     break;
                 }
-                if(incomingPacket[4] == 0) {
+                if (incomingPacket[4] == 0)
+                {
                     sensorStateNotified1 = incomingPacket[5];
-                } else if(incomingPacket[4] == 1) {
+                }
+                else if (incomingPacket[4] == 1)
+                {
                     sensorStateNotified2 = incomingPacket[5];
                 }
                 break;
             }
         }
-        //while(Serial.available()) {
-        //    size_t bytesRead = Serial.readBytes(serialBuffer, min(Serial.available(), sizeof(serialBuffer)));
-        //    sendSerial(serialBuffer, bytesRead, PACKET_SERIAL);
-        //}
-        if(lastPacketMs + TIMEOUT < millis())
+        // while(Serial.available()) {
+        //     size_t bytesRead = Serial.readBytes(serialBuffer, min(Serial.available(), sizeof(serialBuffer)));
+        //     sendSerial(serialBuffer, bytesRead, PACKET_SERIAL);
+        // }
+        if (lastPacketMs + TIMEOUT < millis())
         {
             statusManager.setStatus(SlimeVR::Status::SERVER_CONNECTING, true);
 
@@ -687,10 +767,13 @@ void ServerConnection::update(Sensor * const sensor, Sensor * const sensor2) {
             udpClientLogger.warn("Connection to server timed out");
         }
     }
-        
-    if(!connected) {
+
+    if (!connected)
+    {
         connect();
-    } else if(sensorStateNotified1 != sensor->isWorking() || sensorStateNotified2 != sensor2->isWorking()) {
-        updateSensorState(sensor, sensor2);
+    }
+    else
+    {
+        updateSensorState(sensors);
     }
 }

@@ -36,7 +36,8 @@
 #include "logging/Logger.h"
 
 SlimeVR::Logging::Logger logger("SlimeVR");
-SlimeVR::Sensors::SensorManager sensorManager;
+SlimeVR::Sensors::SensorManager sensorManager = SlimeVR::Sensors::SensorManager({SlimeVR::Sensors::SensorInfo(IMU_1, IMU_ROTATION_1, IMU_INT_1),
+                                                                                 SlimeVR::Sensors::SensorInfo(IMU_2, IMU_ROTATION_2, IMU_INT_2)});
 SlimeVR::LEDManager ledManager(LED_PIN);
 SlimeVR::Status::StatusManager statusManager;
 SlimeVR::Configuration::Configuration configuration;
@@ -52,7 +53,7 @@ void setup()
 {
     Serial.begin(serialBaudRate);
 
-#ifdef ESP32C3 
+#ifdef ESP32C3
     // Wait for the Computer to be able to connect.
     delay(2000);
 #endif
@@ -70,7 +71,7 @@ void setup()
 
     SerialCommands::setUp();
 
-#if IMU == IMU_MPU6500 || IMU == IMU_MPU6050 || IMU == IMU_MPU9250
+#if IMU_1 == IMU_MPU6500 || IMU_1 == IMU_MPU6050 || IMU_1 == IMU_MPU9250
     I2CSCAN::clearBus(PIN_IMU_SDA, PIN_IMU_SCL); // Make sure the bus isn't stuck when resetting ESP without powering it down
     // Do it only for MPU, cause reaction of BNO to this is not investigated yet
 #endif
@@ -82,7 +83,7 @@ void setup()
 #endif
 
     // using `static_cast` here seems to be better, because there are 2 similar function signatures
-    Wire.begin(static_cast<int>(PIN_IMU_SDA), static_cast<int>(PIN_IMU_SCL)); 
+    Wire.begin(static_cast<int>(PIN_IMU_SDA), static_cast<int>(PIN_IMU_SCL));
 
 #ifdef ESP8266
     Wire.setClockStretchLimit(150000L); // Default stretch limit 150mS
@@ -91,9 +92,9 @@ void setup()
 
     // Wait for IMU to boot
     delay(500);
-    
+
     sensorManager.setup();
-    
+
     Network::setUp();
     OTA::otaSetup(otaPassword);
     battery.Setup();
@@ -109,7 +110,7 @@ void loop()
 {
     SerialCommands::update();
     OTA::otaUpdate();
-    Network::update(sensorManager.getFirst(), sensorManager.getSecond());
+    sensorManager.updateSensorData();
     sensorManager.update();
     battery.Loop();
     ledManager.update();
@@ -118,9 +119,9 @@ void loop()
     long elapsed = (micros() - loopTime);
     if (elapsed < TARGET_LOOPTIME_MICROS)
     {
-        long sleepus = TARGET_LOOPTIME_MICROS - elapsed - 100;//µs to sleep
-        long sleepms = sleepus / 1000;//ms to sleep
-        if(sleepms > 0) // if >= 1 ms
+        long sleepus = TARGET_LOOPTIME_MICROS - elapsed - 100; //µs to sleep
+        long sleepms = sleepus / 1000;                         // ms to sleep
+        if (sleepms > 0)                                       // if >= 1 ms
         {
             delay(sleepms); // sleep ms = save power
             sleepus -= sleepms * 1000;
