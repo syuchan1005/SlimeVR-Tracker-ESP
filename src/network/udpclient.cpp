@@ -20,6 +20,7 @@
     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
     THE SOFTWARE.
 */
+#include <map>
 
 #include "udpclient.h"
 #include "packets.h"
@@ -40,8 +41,7 @@ unsigned long lastPacketMs;
 
 bool connected = false;
 
-uint8_t sensorStateNotified1 = 0;
-uint8_t sensorStateNotified2 = 0;
+std::map<unsigned char, bool> sensorStateNotifiedMap;
 unsigned long lastSensorInfoPacket = 0;
 
 uint8_t serialBuffer[128];
@@ -608,16 +608,7 @@ void updateSensorState(std::vector<Sensor *> sensors)
         int i = 0;
         for (auto sensor : sensors)
         {
-            uint8_t notifiedState = 0;
-            if (i % 2 == 0)
-            {
-                notifiedState = sensorStateNotified1;
-            }
-            else
-            {
-                notifiedState = sensorStateNotified2;
-            }
-            if (notifiedState != sensor->getSensorState())
+            if (!sensorStateNotifiedMap.count(i) || sensorStateNotifiedMap[i] != sensor->getSensorState())
             {
                 Network::sendSensorInfo(sensor);
                 hasChanged = true;
@@ -742,14 +733,7 @@ void ServerConnection::update(std::vector<Sensor *> sensors)
                     udpClientLogger.warn("Wrong sensor info packet");
                     break;
                 }
-                if (incomingPacket[4] == 0)
-                {
-                    sensorStateNotified1 = incomingPacket[5];
-                }
-                else if (incomingPacket[4] == 1)
-                {
-                    sensorStateNotified2 = incomingPacket[5];
-                }
+                sensorStateNotifiedMap[incomingPacket[4]] = incomingPacket[5];
                 break;
             }
         }
@@ -762,8 +746,7 @@ void ServerConnection::update(std::vector<Sensor *> sensors)
             statusManager.setStatus(SlimeVR::Status::SERVER_CONNECTING, true);
 
             connected = false;
-            sensorStateNotified1 = false;
-            sensorStateNotified2 = false;
+            sensorStateNotifiedMap.clear();
             udpClientLogger.warn("Connection to server timed out");
         }
     }
