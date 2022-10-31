@@ -38,6 +38,10 @@ namespace SlimeVR
     {
         void SensorManager::setup()
         {
+            for (auto sensorInfo : m_SensorInfos)
+            {
+                sensorInfo.toggleSensorBehavior->init();
+            }
             int i = 0;
             for (auto sensorInfo : m_SensorInfos)
             {
@@ -84,32 +88,46 @@ namespace SlimeVR
             Network::update(m_Sensors);
         }
 
-        Sensor * SensorManager::createSensor(SlimeVR::Logging::Logger logger, uint8_t id, SlimeVR::Sensors::SensorInfo sensorInfo)
+        Sensor *SensorManager::createSensor(SlimeVR::Logging::Logger logger, uint8_t id, SlimeVR::Sensors::SensorInfo sensorInfo)
         {
+            sensorInfo.toggleSensorBehavior->startUseSensor();
             uint8_t imuAddress = 0;
-            switch (sensorInfo.sensorType)
+            uint8_t preferableIMUAddress = sensorInfo.toggleSensorBehavior->getPreferableIMUAddr();
+            if (preferableIMUAddress > 0 && I2CSCAN::isI2CExist(preferableIMUAddress))
             {
-            case IMU_BNO080:
-            case IMU_BNO085:
-            case IMU_BNO086:
-                imuAddress = I2CSCAN::pickDevice(0x4A, 0x4B, true);
-                break;
-            case IMU_BNO055:
-                imuAddress = I2CSCAN::pickDevice(0x29, 0x28, true);
-                break;
-            case IMU_MPU9250:
-            case IMU_BMI160:
-            case IMU_MPU6500:
-            case IMU_MPU6050:
-            case IMU_ICM20948:
-                if (id % 2 == 0)
-                    imuAddress = I2CSCAN::pickDevice(0x68, 0x69, true);
-                else
-                    imuAddress = I2CSCAN::pickDevice(0x69, 0x68, true);
-                break;
-            default:
-                break;
+                imuAddress = preferableIMUAddress;
             }
+            else
+            {
+                switch (sensorInfo.sensorType)
+                {
+                case IMU_BNO080:
+                case IMU_BNO085:
+                case IMU_BNO086:
+                    imuAddress = I2CSCAN::pickDevice(0x4A, 0x4B, true);
+                    break;
+                case IMU_BNO055:
+                    imuAddress = I2CSCAN::pickDevice(0x29, 0x28, true);
+                    break;
+                case IMU_MPU9250:
+                case IMU_BMI160:
+                case IMU_MPU6500:
+                case IMU_MPU6050:
+                case IMU_ICM20948:
+                    if (id % 2 == 0)
+                    {
+                        imuAddress = I2CSCAN::pickDevice(0x68, 0x69, true);
+                    }
+                    else
+                    {
+                        imuAddress = I2CSCAN::pickDevice(0x69, 0x68, true);
+                    }
+                    break;
+                default:
+                    break;
+                }
+            }
+            sensorInfo.toggleSensorBehavior->endUseSensor();
 
             if (imuAddress == 0)
             {
