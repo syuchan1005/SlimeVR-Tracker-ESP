@@ -66,7 +66,7 @@ namespace Network {
     void sendHeartbeat();
 
     // PACKET_HANDSHAKE 3
-    void sendHandshake();
+    void sendHandshake(uint8_t imuType);
 
     // PACKET_ACCEL 4
     void sendAccel(float* vector, uint8_t sensorId);

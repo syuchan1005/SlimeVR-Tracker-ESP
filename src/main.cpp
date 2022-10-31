@@ -34,10 +34,11 @@
 #include "status/StatusManager.h"
 #include "batterymonitor.h"
 #include "logging/Logger.h"
+#include "defines-sensors.h"
 
 SlimeVR::Logging::Logger logger("SlimeVR");
-SlimeVR::Sensors::SensorManager sensorManager = SlimeVR::Sensors::SensorManager({SlimeVR::Sensors::SensorInfo(IMU_1, IMU_ROTATION_1, IMU_INT_1),
-                                                                                 SlimeVR::Sensors::SensorInfo(IMU_2, IMU_ROTATION_2, IMU_INT_2)});
+SlimeVR::Sensors::SensorManager sensorManager = SlimeVR::Sensors::SensorManager(SENSOR_INFOS);
+
 SlimeVR::LEDManager ledManager(LED_PIN);
 SlimeVR::Status::StatusManager statusManager;
 SlimeVR::Configuration::Configuration configuration;
@@ -71,10 +72,14 @@ void setup()
 
     SerialCommands::setUp();
 
-#if IMU_1 == IMU_MPU6500 || IMU_1 == IMU_MPU6050 || IMU_1 == IMU_MPU9250
-    I2CSCAN::clearBus(PIN_IMU_SDA, PIN_IMU_SCL); // Make sure the bus isn't stuck when resetting ESP without powering it down
-    // Do it only for MPU, cause reaction of BNO to this is not investigated yet
-#endif
+    bool hasMPUSensor = std::count_if(SENSOR_INFOS.begin(), SENSOR_INFOS.end(), [](SlimeVR::Sensors::SensorInfo sensorInfo) -> bool
+                  { return sensorInfo.sensorType == IMU_MPU6500 || sensorInfo.sensorType == IMU_MPU6050 || sensorInfo.sensorType == IMU_MPU9250; });
+    if (hasMPUSensor)
+    {
+        I2CSCAN::clearBus(PIN_IMU_SDA, PIN_IMU_SCL); // Make sure the bus isn't stuck when resetting ESP without powering it down
+        // Do it only for MPU, cause reaction of BNO to this is not investigated yet
+    }
+
     // join I2C bus
 
 #if ESP32

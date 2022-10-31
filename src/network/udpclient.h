@@ -31,7 +31,7 @@
 #include "globals.h"
 
 namespace ServerConnection {
-    void connect();
+    void connect(uint8_t firstImuType);
     void update(std::vector<Sensor *> sensors);
     void resetConnection();
     bool isConnected();

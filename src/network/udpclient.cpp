@@ -410,7 +410,7 @@ void Network::sendTemperature(float temperature, uint8_t sensorId)
     }
 }
 
-void Network::sendHandshake()
+void Network::sendHandshake(uint8_t imuType)
 {
     if (DataTransfer::beginPacket())
     {
@@ -420,7 +420,7 @@ void Network::sendHandshake()
         // This is kept for backwards compatibility,
         // but the latest SlimeVR server will not initialize trackers
         // with firmware build > 8 until it recieves sensor info packet
-        DataTransfer::sendInt(IMU_1);
+        DataTransfer::sendInt(imuType);
         DataTransfer::sendInt(HARDWARE_MCU);
         DataTransfer::sendInt(0);
         DataTransfer::sendInt(0);
@@ -629,7 +629,7 @@ bool ServerConnection::isConnected()
     return connected;
 }
 
-void ServerConnection::connect()
+void ServerConnection::connect(uint8_t firstImuType)
 {
     unsigned long now = millis();
     while (true)
@@ -673,7 +673,7 @@ void ServerConnection::connect()
     {
         lastConnectionAttemptMs = now;
         udpClientLogger.info("Looking for the server...");
-        Network::sendHandshake();
+        Network::sendHandshake(firstImuType);
         ledManager.on();
     }
     else if (lastConnectionAttemptMs + 20 < now)
@@ -753,7 +753,7 @@ void ServerConnection::update(std::vector<Sensor *> sensors)
 
     if (!connected)
     {
-        connect();
+        connect(sensors[0]->getSensorType());
     }
     else
     {
