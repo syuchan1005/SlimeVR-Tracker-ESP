@@ -34,22 +34,52 @@ namespace SlimeVR
     namespace Sensors
     {
 
+        namespace ToggleSensor
+        {
+            /**
+             * Behavior class representing sensor switching.
+             * This is a base class of sealed class. Do not extend this class outside of this file.
+             */
+            class AbstractBehavior
+            {
+            public:
+                virtual void init(){};
+                virtual void startUseSensor(){};
+                virtual void endUseSensor(){};
+
+                uint8_t getPreferableIMUAddr()
+                {
+                    return m_preferableIMUAddr;
+                };
+
+            protected:
+                uint8_t m_preferableIMUAddr = 0;
+            };
+
+            class None : public AbstractBehavior
+            {
+            };
+        };
+
         class SensorInfo
         {
         public:
             SensorInfo(
                 uint8_t sensorType,
                 float sensorRotation,
-                uint8_t sensorIntPin)
+                uint8_t sensorIntPin,
+                ToggleSensor::AbstractBehavior *toggleSensorBehavior)
             {
                 this->sensorType = sensorType;
                 this->sensorRotation = sensorRotation;
                 this->sensorIntPin = sensorIntPin;
+                this->toggleSensorBehavior = toggleSensorBehavior;
             }
 
             uint8_t sensorType;
             float sensorRotation;
             uint8_t sensorIntPin;
+            ToggleSensor::AbstractBehavior *toggleSensorBehavior;
         };
 
         class SensorManager
@@ -58,8 +88,10 @@ namespace SlimeVR
             SensorManager(std::vector<SlimeVR::Sensors::SensorInfo> sensorInfos)
                 : m_Logger(SlimeVR::Logging::Logger("SensorManager")), m_SensorInfos(sensorInfos) {}
 
-            ~SensorManager() {
-                for (auto sensor : m_Sensors) {
+            ~SensorManager()
+            {
+                for (auto sensor : m_Sensors)
+                {
                     delete sensor;
                 }
             }
