@@ -24,6 +24,8 @@
 #ifndef SLIMEVR_SENSORMANAGER
 #define SLIMEVR_SENSORMANAGER
 
+#include <Wire.h>
+
 #include "globals.h"
 #include "sensor.h"
 #include "EmptySensor.h"
@@ -58,6 +60,40 @@ namespace SlimeVR
 
             class None : public AbstractBehavior
             {
+            };
+
+            class Pin : public AbstractBehavior
+            {
+            public:
+                Pin(uint8_t pin) : pinNum(pin){};
+                Pin(uint8_t pin, uint8_t preferableIMUAddr) : pinNum(pin) { m_preferableIMUAddr = preferableIMUAddr; };
+
+                void init() override { pinMode(pinNum, OUTPUT); }
+
+                void startUseSensor() override { digitalWrite(pinNum, LOW); }
+
+                void endUseSensor() override { digitalWrite(pinNum, HIGH); }
+
+            private:
+                uint8_t pinNum;
+            };
+
+            class TCA9548A : public AbstractBehavior
+            {
+            public:
+                TCA9548A(uint8_t addr, uint8_t ch) : m_addr(addr), m_ch(ch){};
+                TCA9548A(uint8_t addr, uint8_t ch, uint8_t preferableIMUAddr) : m_addr(addr), m_ch(ch) { m_preferableIMUAddr = preferableIMUAddr; };
+
+                void startUseSensor() override
+                {
+                    Wire.beginTransmission(m_addr);
+                    Wire.write(1 << m_ch);
+                    Wire.endTransmission();
+                };
+
+            private:
+                uint8_t m_addr;
+                uint8_t m_ch;
             };
         };
 
