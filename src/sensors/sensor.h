@@ -54,14 +54,15 @@ public:
     virtual void sendData();
     virtual void startCalibration(int calibrationType){};
     virtual uint8_t getSensorState();
-    bool isWorking()
+    
+    virtual bool isWorking()
     {
         return working;
     };
-    uint8_t getSensorId() {
+    virtual uint8_t getSensorId() {
         return sensorId;
     };
-    uint8_t getSensorType() {
+    virtual uint8_t getSensorType() {
         return sensorType;
     };
 

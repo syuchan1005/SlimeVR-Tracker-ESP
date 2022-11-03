@@ -31,6 +31,7 @@
 #include "bmi160sensor.h"
 #include "icm20948sensor.h"
 #include "ErroneousSensor.h"
+#include "ToggleSensorProxy.h"
 
 namespace SlimeVR
 {
@@ -136,26 +137,35 @@ namespace SlimeVR
 
             logger.trace("IMU found at address 0x%02X", imuAddress);
 
+            Sensor *sensor;
             switch (sensorInfo.sensorType)
             {
             case IMU_BNO080:
             case IMU_BNO085:
             case IMU_BNO086:
-                return new BNO080Sensor(id, sensorInfo.sensorType, imuAddress, sensorInfo.sensorRotation, sensorInfo.sensorIntPin);
+                sensor = new BNO080Sensor(id, sensorInfo.sensorType, imuAddress, sensorInfo.sensorRotation, sensorInfo.sensorIntPin);
+                break;
             case IMU_BNO055:
-                return new BNO055Sensor(id, imuAddress, sensorInfo.sensorRotation);
+                sensor = new BNO055Sensor(id, imuAddress, sensorInfo.sensorRotation);
+                break;
             case IMU_MPU9250:
-                return new MPU9250Sensor(id, imuAddress, sensorInfo.sensorRotation);
+                sensor = new MPU9250Sensor(id, imuAddress, sensorInfo.sensorRotation);
+                break;
             case IMU_BMI160:
-                return new BMI160Sensor(id, imuAddress, sensorInfo.sensorRotation);
+                sensor = new BMI160Sensor(id, imuAddress, sensorInfo.sensorRotation);
+                break;
             case IMU_MPU6500:
             case IMU_MPU6050:
-                return new MPU6050Sensor(id, sensorInfo.sensorType, imuAddress, sensorInfo.sensorRotation);
+                sensor = new MPU6050Sensor(id, sensorInfo.sensorType, imuAddress, sensorInfo.sensorRotation);
+                break;
             case IMU_ICM20948:
-                return new ICM20948Sensor(id, imuAddress, sensorInfo.sensorRotation);
+                sensor = new ICM20948Sensor(id, imuAddress, sensorInfo.sensorRotation);
+                break;
             default:
-                return new ErroneousSensor(id, sensorInfo.sensorType);
+                sensor = new ErroneousSensor(id, sensorInfo.sensorType);
+                break;
             }
+            return new ToggleSensorProxy(sensor, sensorInfo.toggleSensorBehavior);
         }
     }
 }
