@@ -202,6 +202,7 @@ void BMI160Sensor::getScaledValues(float Gxyz[3], float Axyz[3])
     int16_t gx, gy, gz;
     // TODO: Read from FIFO?
     imu.getMotion6(&ax, &ay, &az, &gx, &gy, &gz);
+    m_Logger.info("A %d, %d, %d, %d, %d, %d", ax, ay, az, gx, gy, gz);
 
     // TODO: Sensitivity over temp compensation?
     // TODO: Cross-axis sensitivity compensation?
@@ -212,6 +213,8 @@ void BMI160Sensor::getScaledValues(float Gxyz[3], float Axyz[3])
     Axyz[0] = (float)ax;
     Axyz[1] = (float)ay;
     Axyz[2] = (float)az;
+    
+    m_Logger.info("B %f, %f, %f, %f, %f, %f", Axyz[0], Axyz[1], Axyz[2], Gxyz[0], Gxyz[1], Gxyz[2]);
     //apply offsets (bias) and scale factors from Magneto
     #if useFullCalibrationMatrix == true
         float temp[3];
@@ -224,6 +227,8 @@ void BMI160Sensor::getScaledValues(float Gxyz[3], float Axyz[3])
         for (uint8_t i = 0; i < 3; i++)
             Axyz[i] = (Axyz[i] - calibration->A_B[i]);
     #endif
+    
+    m_Logger.info("C %f, %f, %f, %f, %f, %f", Axyz[0], Axyz[1], Axyz[2], Gxyz[0], Gxyz[1], Gxyz[2]);
 }
 
 void BMI160Sensor::startCalibration(int calibrationType) {
