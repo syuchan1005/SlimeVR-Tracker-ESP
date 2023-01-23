@@ -66,22 +66,17 @@ namespace SerialCommands {
             statusManager.getStatus(),
             WiFiNetwork::getWiFiState()
         );
-        Sensor* sensor1 = sensorManager.getFirst();
-        Sensor* sensor2 = sensorManager.getSecond();
-        logger.info(
-            "Sensor 1: %s (%.3f %.3f %.3f %.3f) is working: %s, had data: %s",
-            getIMUNameByType(sensor1->getSensorType()),
-            UNPACK_QUATERNION(sensor1->getQuaternion()),
-            sensor1->isWorking() ? "true" : "false",
-            sensor1->hadData ? "true" : "false"
-        );
-        logger.info(
-            "Sensor 2: %s (%.3f %.3f %.3f %.3f) is working: %s, had data: %s",
-            getIMUNameByType(sensor2->getSensorType()),
-            UNPACK_QUATERNION(sensor2->getQuaternion()),
-            sensor2->isWorking() ? "true" : "false",
-            sensor2->hadData ? "true" : "false"
-        );
+
+        for (Sensor *sensor : sensorManager.getSensors()) {
+            logger.info(
+                "Sensor %d: %s (%.3f %.3f %.3f %.3f) is working: %s, had data: %s",
+                sensor->getSensorId(),
+                getIMUNameByType(sensor->getSensorType()),
+                UNPACK_QUATERNION(sensor->getQuaternion()),
+                sensor->isWorking() ? "true" : "false",
+                sensor->hadData ? "true" : "false"
+            );
+        }
     }
 
     void cmdGet(CmdParser * parser) {
@@ -133,7 +128,7 @@ namespace SerialCommands {
                 statusManager.getStatus(),
                 WiFiNetwork::getWiFiState()
             );
-            Sensor* sensor1 = sensorManager.getFirst();
+            Sensor* sensor1 = sensorManager.getSensors()[0];
             sensor1->motionLoop();
             logger.info(
                 "[TEST] Sensor 1: %s (%.3f %.3f %.3f %.3f) is working: %s, had data: %s",

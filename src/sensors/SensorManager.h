@@ -138,6 +138,8 @@ namespace SlimeVR
             void update();
             void updateSensorData();
 
+            std::vector<Sensor *> getSensors() { return m_Sensors; };
+
         private:
             SlimeVR::Logging::Logger m_Logger;
 
