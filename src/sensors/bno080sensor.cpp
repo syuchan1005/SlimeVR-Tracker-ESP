@@ -82,8 +82,6 @@ void BNO080Sensor::motionSetup()
     #endif
 #endif
 
-    imu.enableTapDetector(100);
-
 #if ENABLE_INSPECTION
     imu.enableRawGyro(10);
     imu.enableRawAccelerometer(10);
@@ -101,6 +99,7 @@ void BNO080Sensor::motionLoop()
     //Look for reports from the IMU
     while (imu.dataAvailable())
     {
+        hadData = true;
 #if ENABLE_INSPECTION
         {
             int16_t rX = imu.getRawGyroX();
@@ -230,9 +229,7 @@ void BNO080Sensor::sendData()
         Network::sendRotationData(&quaternion, DATA_TYPE_NORMAL, calibrationAccuracy, sensorId);
 
 #if SEND_ACCELERATION
-        {
-            Network::sendAccel(this->acceleration, this->sensorId);
-        }
+        Network::sendAccel(this->acceleration, this->sensorId);
 #endif
 
 #if !USE_6_AXIS

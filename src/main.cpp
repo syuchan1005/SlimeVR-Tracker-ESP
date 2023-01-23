@@ -47,6 +47,7 @@ int sensorToCalibrate = -1;
 bool blinking = false;
 unsigned long blinkStart = 0;
 unsigned long loopTime = 0;
+unsigned long lastStatePrint = 0;
 bool secondImuActive = false;
 BatteryMonitor battery;
 
@@ -73,7 +74,7 @@ void setup()
     SerialCommands::setUp();
 
     bool hasMPUSensor = std::count_if(SENSOR_INFOS.begin(), SENSOR_INFOS.end(), [](SlimeVR::Sensors::SensorInfo sensorInfo) -> bool
-                  { return sensorInfo.sensorType == IMU_MPU6500 || sensorInfo.sensorType == IMU_MPU6050 || sensorInfo.sensorType == IMU_MPU9250; });
+                                      { return sensorInfo.sensorType == IMU_MPU6500 || sensorInfo.sensorType == IMU_MPU6050 || sensorInfo.sensorType == IMU_MPU9250 || sensorInfo.sensorType == IMU_BNO055 || sensorInfo.sensorType == IMU_ICM20948; });
     if (hasMPUSensor)
     {
         I2CSCAN::clearBus(PIN_IMU_SDA, PIN_IMU_SCL); // Make sure the bus isn't stuck when resetting ESP without powering it down
@@ -119,12 +120,11 @@ void loop()
     sensorManager.update();
     battery.Loop();
     ledManager.update();
-
 #ifdef TARGET_LOOPTIME_MICROS
     long elapsed = (micros() - loopTime);
     if (elapsed < TARGET_LOOPTIME_MICROS)
     {
-        long sleepus = TARGET_LOOPTIME_MICROS - elapsed - 100; //µs to sleep
+        long sleepus = TARGET_LOOPTIME_MICROS - elapsed - 100; // µs to sleep
         long sleepms = sleepus / 1000;                         // ms to sleep
         if (sleepms > 0)                                       // if >= 1 ms
         {
@@ -137,5 +137,13 @@ void loop()
         }
     }
     loopTime = micros();
+#endif
+#if defined(PRINT_STATE_EVERY_MS) && PRINT_STATE_EVERY_MS > 0
+    unsigned long now = millis();
+    if (lastStatePrint + PRINT_STATE_EVERY_MS < now)
+    {
+        lastStatePrint = now;
+        SerialCommands::printState();
+    }
 #endif
 }
