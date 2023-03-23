@@ -178,20 +178,24 @@ namespace SerialCommands {
     void cmdTemperatureCalibration(CmdParser* parser) {
         if (parser->getParamCount() > 1) {
             if (parser->equalCmdParam(1, "PRINT")) {
-                sensorManager.getFirst()->printTemperatureCalibrationState();
-                sensorManager.getSecond()->printTemperatureCalibrationState();
+                for (Sensor *sensor : sensorManager.getSensors()) {
+                    sensor->printTemperatureCalibrationState();
+                }
                 return;
             } else if (parser->equalCmdParam(1, "DEBUG")) {
-                sensorManager.getFirst()->printDebugTemperatureCalibrationState();
-                sensorManager.getSecond()->printDebugTemperatureCalibrationState();
+                for (Sensor *sensor : sensorManager.getSensors()) {
+                    sensor->printDebugTemperatureCalibrationState();
+                }
                 return;
             } else if (parser->equalCmdParam(1, "RESET")) {
-                sensorManager.getFirst()->resetTemperatureCalibrationState();
-                sensorManager.getSecond()->resetTemperatureCalibrationState();
+                for (Sensor *sensor : sensorManager.getSensors()) {
+                    sensor->resetTemperatureCalibrationState();
+                }
                 return;
             } else if (parser->equalCmdParam(1, "SAVE")) {
-                sensorManager.getFirst()->saveTemperatureCalibration();
-                sensorManager.getSecond()->saveTemperatureCalibration();
+                for (Sensor *sensor : sensorManager.getSensors()) {
+                    sensor->saveTemperatureCalibration();
+                }
                 return;
             }
         }
