@@ -42,7 +42,7 @@ constexpr float gscale = (250. / 32768.0) * (PI / 180.0); //gyro default 250 LSB
 #define ACCEL_SENSITIVITY_2G 16384.0f
 
 // Accel scale conversion steps: LSB/G -> G -> m/s^2
-constexpr float ASCALE_2G = ((32768. / ACCEL_SENSITIVITY_2G) / 32768.) * EARTH_GRAVITY;
+constexpr float ASCALE_2G = ((32768. / ACCEL_SENSITIVITY_2G) / 32768.) * CONST_EARTH_GRAVITY;
 
 void MPU9250Sensor::motionSetup() {
     // initialize device
@@ -198,9 +198,9 @@ void MPU9250Sensor::motionLoop() {
         this->imu.dmpGetLinearAccel(&this->rawAccel, &this->rawAccel, &grav);
 
         // convert acceleration to m/s^2 (implicitly casts to float)
-        this->acceleration[0] = this->rawAccel.x * ASCALE_2G;
-        this->acceleration[1] = this->rawAccel.y * ASCALE_2G;
-        this->acceleration[2] = this->rawAccel.z * ASCALE_2G;
+        this->linearAcceleration[0] = this->rawAccel.x * ASCALE_2G;
+        this->linearAcceleration[1] = this->rawAccel.y * ASCALE_2G;
+        this->linearAcceleration[2] = this->rawAccel.z * ASCALE_2G;
     }
 #endif
 
@@ -260,7 +260,7 @@ void MPU9250Sensor::startCalibration(int calibrationType) {
         ledManager.on();
         int16_t mx,my,mz;
         imu.getMagnetometer(&mx, &my, &mz);
-        magneto->sample(mx, my, mz);
+        magneto->sample(my, mx, -mz);
 
         float rawMagFloat[3] = { (float)mx, (float)my, (float)mz};
         Network::sendRawCalibrationData(rawMagFloat, CALIBRATION_TYPE_EXTERNAL_MAG, 0);
@@ -335,7 +335,7 @@ void MPU9250Sensor::startCalibration(int calibrationType) {
         int16_t ax,ay,az,gx,gy,gz,mx,my,mz;
         imu.getMotion9(&ax, &ay, &az, &gx, &gy, &gz, &mx, &my, &mz);
         magneto_acc->sample(ax, ay, az);
-        magneto_mag->sample(mx, my, -mz);
+        magneto_mag->sample(my, mx, -mz);
 
         // Thought: since we're sending the samples to the server anyway,
         // we could make the server run magneto for us.

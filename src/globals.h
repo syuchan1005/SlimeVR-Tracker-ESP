@@ -27,6 +27,8 @@
 #include "consts.h"
 #include "debug.h"
 #include "defines.h"
+#include "defines_bmi160.h"
+#include "defines_sensitivity.h"
 
 #ifndef BATTERY_MONITOR
 #define BATTERY_MONITOR BAT_INTERNAL

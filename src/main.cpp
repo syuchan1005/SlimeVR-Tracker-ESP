@@ -74,7 +74,7 @@ void setup()
     SerialCommands::setUp();
 
     bool hasMPUSensor = std::count_if(SENSOR_INFOS.begin(), SENSOR_INFOS.end(), [](SlimeVR::Sensors::SensorInfo sensorInfo) -> bool
-                                      { return sensorInfo.sensorType == IMU_MPU6500 || sensorInfo.sensorType == IMU_MPU6050 || sensorInfo.sensorType == IMU_MPU9250 || sensorInfo.sensorType == IMU_BNO055 || sensorInfo.sensorType == IMU_ICM20948; });
+                                      { return sensorInfo.sensorType == IMU_MPU6500 || sensorInfo.sensorType == IMU_MPU6050 || sensorInfo.sensorType == IMU_MPU9250 || sensorInfo.sensorType == IMU_BNO055 || sensorInfo.sensorType == IMU_ICM20948 || sensorInfo.sensorType == IMU_BMI160; });
     if (hasMPUSensor)
     {
         I2CSCAN::clearBus(PIN_IMU_SDA, PIN_IMU_SCL); // Make sure the bus isn't stuck when resetting ESP without powering it down
@@ -93,6 +93,9 @@ void setup()
 
 #ifdef ESP8266
     Wire.setClockStretchLimit(150000L); // Default stretch limit 150mS
+#endif
+#ifdef ESP32 // Counterpart on ESP32 to ClockStretchLimit
+    Wire.setTimeOut(150);
 #endif
     Wire.setClock(I2C_SPEED);
 
